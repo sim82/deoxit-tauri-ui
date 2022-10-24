@@ -1,6 +1,5 @@
 import { invoke } from "@tauri-apps/api/tauri";
 import { Event as TauriEvent, listen } from '@tauri-apps/api/event';
-import { ask } from '@tauri-apps/api/dialog';
 import { open } from '@tauri-apps/api/dialog';
 import { homeDir } from '@tauri-apps/api/path';
 import type { HubEvent } from './bindings/HubEvent.js';
