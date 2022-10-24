@@ -25,19 +25,6 @@ async fn some_quote(app: AppHandle<Wry>) -> String {
     " ... one second later".into()
 }
 
-// #[tauri::command]
-// async fn update_root_path(app: AppHandle<Wry>) {
-//     let ctx = Ctx::from_app(app);
-
-//     // deoxit::visit_cargo_dirs_async("/home/sim/src", |path, size| {
-//     //     ctx.emit_hub_event(HubEvent { path, size });
-//     // })
-//     deoxit::visit_cargo_dirs_inc_async("/home/sim/", |index, path, size| {
-//         ctx.emit_hub_event(HubEvent { index, path, size });
-//     })
-//     .await;
-// }
-
 #[tauri::command]
 async fn update_root_path(app: AppHandle<Wry>) {
     let ctx = Ctx::from_app(app);
@@ -54,9 +41,19 @@ async fn update_root_path(app: AppHandle<Wry>) {
 
     deoxit::find_cargo_dirs_channel("/home/sim", sender).await;
     let _ = tokio::join!(h);
-    // deoxit::visit_cargo_dirs_async("/home/sim/src", |path, size| {
-    //     ctx.emit_hub_event(HubEvent { path, size });
-    // })
+}
+
+#[tauri::command]
+async fn clean_directory(path: String) {
+    println!("clean {:?}", path);
+
+    let out = std::process::Command::new("cargo")
+        .current_dir(path)
+        .args(["clean"])
+        .output()
+        .unwrap();
+
+    println!("out: {:?}", out);
 }
 
 fn main() {
@@ -64,7 +61,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             greet,
             some_quote,
-            update_root_path
+            update_root_path,
+            clean_directory,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
