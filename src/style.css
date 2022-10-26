@@ -16,7 +16,7 @@
 
 .container {
   margin: 0;
-  padding-top: 2vh;
+  /* padding-top: 10vh; */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -24,8 +24,8 @@
 }
 
 .logo {
-  height: 2em;
-  padding: 1em;
+  height: 6em;
+  padding: 1.5em;
   will-change: filter;
   transition: 0.75s;
 }
@@ -71,10 +71,6 @@ button {
   cursor: pointer;
 }
 
-#something-btn {
-  cursor: crosshair
-}
-
 button:hover {
   border-color: #396cd8;
 }
@@ -103,28 +99,4 @@ button {
     color: #ffffff;
     background-color: #0f0f0f98;
   }
-}
-
-table {
-  border-collapse: collapse;
-}
-
-td {
-  border: 1px solid;
-}
-
-#list-outer {
-  background-color: #fed9ff;
-  width: 600px;
-  height: 100px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  text-align: center;
-  padding: 20px;
-}
-
-#displaced-line {
-  /* position: absolute; */
-  top: 200px;
-  height: 19px;
 }

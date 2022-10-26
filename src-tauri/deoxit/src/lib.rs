@@ -1,5 +1,9 @@
 use fs_extra::dir::get_size;
-use std::{fs::ReadDir, path::Path, sync::Mutex};
+use std::{
+    fs::{DirEntry, ReadDir},
+    path::Path,
+    sync::Mutex,
+};
 use tokio::sync::mpsc;
 
 pub fn find_cargo_dirs<P: AsRef<Path>>(root: P, indent: &str) {
@@ -42,6 +46,65 @@ pub async fn find_cargo_dirs_channel<P: AsRef<Path>>(root: P, sender: mpsc::Send
                         }
                         _ => (),
                     }
+                }
+            }
+        }
+    });
+}
+
+pub trait DirFilter {
+    fn accept(&self, entries: &[DirEntry]) -> bool;
+}
+
+pub struct CargoDirFilter;
+
+impl DirFilter for CargoDirFilter {
+    fn accept(&self, entries: &[DirEntry]) -> bool {
+        let mut has_cargo_toml = false;
+        let mut has_target_dir = false;
+
+        for ent in entries {
+            has_target_dir |= ent.file_name() == "target"
+                && ent
+                    .file_type()
+                    .map_or(false, |t| t.is_dir() && !t.is_symlink());
+            has_cargo_toml |= ent.file_name() == "Cargo.toml"
+                && ent
+                    .file_type()
+                    .map_or(false, |t| t.is_file() && !t.is_symlink());
+        }
+
+        has_cargo_toml && has_target_dir
+    }
+}
+
+pub async fn find_dirs_filter<P: AsRef<Path>, F: DirFilter + Send + Sync + 'static>(
+    root: P,
+    filter: F,
+    sender: mpsc::Sender<(String, u64)>,
+) {
+    let mut stack = vec![root.as_ref().to_owned()];
+
+    tokio::task::spawn_blocking(move || {
+        while let Some(root) = stack.pop() {
+            if let Ok(dir) = std::fs::read_dir(&root) {
+                let mut entries = dir
+                    .into_iter()
+                    .filter_map(|ent| ent.ok())
+                    .collect::<Vec<_>>();
+
+                if filter.accept(&entries[..]) {
+                    let size = get_size(&root).unwrap_or_default();
+                    sender
+                        .blocking_send((root.to_string_lossy().to_string(), size))
+                        .unwrap();
+                }
+
+                for ent in entries.drain(..).filter(|ent| {
+                    ent.file_type()
+                        .map_or(false, |t| t.is_dir() && !t.is_symlink())
+                }) {
+                    stack.push(ent.path())
                 }
             }
         }
@@ -102,10 +165,11 @@ pub async fn visit_cargo_dirs_async<P: AsRef<Path>, F: Fn(String, u64) -> ()>(ro
     }
 }
 
-pub async fn visit_cargo_dirs_inc_async<P: AsRef<Path>, F: Fn(usize, String, u64) -> ()>(
-    root: P,
-    f: F,
-) {
+pub async fn visit_cargo_dirs_inc_async<P, F>(root: P, f: F)
+where
+    P: AsRef<Path>,
+    F: Fn(usize, String, u64) -> (),
+{
     let order = Mutex::new(Vec::<u64>::new());
 
     visit_cargo_dirs_async(root, |name, size| {
@@ -161,6 +225,19 @@ mod tests {
         });
 
         find_cargo_dirs_channel("/home/sim/", sender).await;
+        tokio::join!(h);
+    }
+
+    #[tokio::test]
+    async fn test_channel2() {
+        let (sender, mut receiver) = mpsc::channel(64);
+        let h = tokio::task::spawn(async move {
+            while let Some((path, size)) = receiver.recv().await {
+                println!("{} {}", size, path);
+            }
+        });
+
+        find_dirs_filter("/home/sim/", CargoDirFilter, sender).await;
         tokio::join!(h);
     }
 }

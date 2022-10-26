@@ -6,6 +6,7 @@
 use std::time::Duration;
 
 use ctx::Ctx;
+use deoxit::CargoDirFilter;
 use event::HubEvent;
 use tauri::{AppHandle, Wry};
 use tokio::sync::mpsc;
@@ -26,7 +27,7 @@ async fn some_quote(app: AppHandle<Wry>) -> String {
 }
 
 #[tauri::command]
-async fn update_root_path(app: AppHandle<Wry>) {
+async fn update_root_path(root: String, app: AppHandle<Wry>) {
     let ctx = Ctx::from_app(app);
 
     let (sender, mut receiver) = mpsc::channel(64);
@@ -39,7 +40,9 @@ async fn update_root_path(app: AppHandle<Wry>) {
         }
     });
 
-    deoxit::find_cargo_dirs_channel("/home/sim", sender).await;
+    // deoxit::find_cargo_dirs_channel("/home/sim", sender).await;
+    deoxit::find_dirs_filter(root, CargoDirFilter, sender).await;
+
     let _ = tokio::join!(h);
 }
 

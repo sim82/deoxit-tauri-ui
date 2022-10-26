@@ -1,43 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tauri + Svelte + TS</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="/src/projects.css" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tauri App</title>
-  <script type="module" src="/src/projects.ts" defer></script>
-  <style>
-    .logo.vite:hover {
-      filter: drop-shadow(0 0 2em #747bff);
-    }
-
-    .logo.typescript:hover {
-      filter: drop-shadow(0 0 2em #2d79c7);
-    }
-  </style>
-</head>
-
-<body>
-  <div id="myDIV" class="header">
-    <h2>My To Do List</h2>
-    <!-- <button onclick="update_root_path()">Update</button> -->
-    <span onclick="choose_root_path()" class="addBtn">Dir</span>
-    <span onclick="update_root_path()" class="addBtn">Search</span>
-    <div hidden="true" id="load-spinner">
-      <svg class="spinner" viewBox="0 0 50 50">
-        <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
-      </svg>
-    </div>
-    <span onclick="cargo_clean()" class="addBtn">Clean</span>
-
-    <span id="root-dir-label"></span>
-  </div>
-
-
-
-  <ul id="projects-list">
-  </ul>
-</body>
-
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
